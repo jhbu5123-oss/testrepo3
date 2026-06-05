@@ -1,0 +1,970 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="format-detection" content="telephone=no" />
+  <meta name="description" content="2026 제주 로컬 크리에이터 박람회 랜딩 페이지" />
+  <title>2026 제주 로컬 크리에이터 박람회</title>
+
+  <!-- Korean font: prevents broken Korean glyphs across browsers. -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;800;900&display=swap" rel="stylesheet" />
+
+  <!-- Bootstrap 5.3 -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" />
+
+  <!-- Leaflet CSS: must be loaded before Leaflet JS. -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+
+  <style>
+    :root {
+      --jeju-deep: #0f766e;
+      --jeju-green: #14b8a6;
+      --jeju-mint: #ccfbf1;
+      --jeju-cream: #fff7ed;
+      --jeju-orange: #f59e0b;
+      --jeju-ink: #14312f;
+      --jeju-soft: #f8fffd;
+      --shadow-soft: 0 18px 60px rgba(15, 118, 110, 0.14);
+      --shadow-card: 0 12px 36px rgba(15, 23, 42, 0.08);
+      --radius-xl: 1.5rem;
+      --radius-2xl: 2rem;
+    }
+
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: 'Noto Sans KR', 'Pretendard', 'Apple SD Gothic Neo', 'Malgun Gothic', '맑은 고딕', sans-serif;
+      word-break: keep-all;
+      overflow-x: hidden;
+      background: linear-gradient(180deg, #f0fdfa 0%, #ffffff 42%, #fff7ed 100%);
+      color: #1e293b;
+    }
+
+    a { text-decoration: none; }
+    section { scroll-margin-top: 96px; }
+
+    .skip-link {
+      position: absolute;
+      left: -999px;
+      top: 10px;
+      z-index: 9999;
+      padding: 10px 14px;
+      border-radius: 12px;
+      background: var(--jeju-deep);
+      color: #fff;
+    }
+    .skip-link:focus { left: 12px; }
+
+    .navbar-glass {
+      background: rgba(255, 255, 255, 0.88);
+      backdrop-filter: blur(18px);
+      -webkit-backdrop-filter: blur(18px);
+      border-bottom: 1px solid rgba(15, 118, 110, 0.12);
+    }
+
+    .brand-mark {
+      width: 46px;
+      height: 46px;
+      border-radius: 18px;
+      display: grid;
+      place-items: center;
+      background: linear-gradient(135deg, var(--jeju-deep), var(--jeju-green));
+      box-shadow: var(--shadow-soft);
+    }
+
+    .btn-jeju {
+      --bs-btn-color: #fff;
+      --bs-btn-bg: var(--jeju-deep);
+      --bs-btn-border-color: var(--jeju-deep);
+      --bs-btn-hover-color: #fff;
+      --bs-btn-hover-bg: #115e59;
+      --bs-btn-hover-border-color: #115e59;
+      --bs-btn-active-bg: #134e4a;
+      --bs-btn-active-border-color: #134e4a;
+      font-weight: 900;
+      border-radius: 1rem;
+      box-shadow: 0 14px 34px rgba(15, 118, 110, 0.22);
+    }
+
+    .btn-outline-jeju {
+      --bs-btn-color: var(--jeju-deep);
+      --bs-btn-border-color: rgba(15, 118, 110, 0.24);
+      --bs-btn-hover-color: var(--jeju-deep);
+      --bs-btn-hover-bg: #ecfdf5;
+      --bs-btn-hover-border-color: rgba(15, 118, 110, 0.36);
+      font-weight: 900;
+      border-radius: 1rem;
+      background: #fff;
+    }
+
+    .bg-decor {
+      position: fixed;
+      inset: 0;
+      z-index: -2;
+      overflow: hidden;
+      pointer-events: none;
+    }
+    .grid-decor {
+      position: absolute;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(15, 118, 110, 0.07) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(15, 118, 110, 0.07) 1px, transparent 1px);
+      background-size: 42px 42px;
+      mask-image: linear-gradient(to bottom, black 0%, black 55%, transparent 100%);
+    }
+    .blob {
+      position: absolute;
+      border-radius: 999px;
+      filter: blur(10px);
+      opacity: 0.58;
+      pointer-events: none;
+    }
+    #blobA { width: 18rem; height: 18rem; left: -6rem; top: 7rem; background: rgba(153, 246, 228, 0.86); }
+    #blobB { width: 20rem; height: 20rem; right: -7rem; top: 13rem; background: rgba(253, 230, 138, 0.78); }
+    #blobC { width: 24rem; height: 24rem; left: 35%; bottom: -9rem; background: rgba(209, 250, 229, 0.86); }
+
+    .hero-section {
+      position: relative;
+      padding-top: 7rem;
+      padding-bottom: 5rem;
+      overflow: hidden;
+    }
+    .hero-title {
+      color: var(--jeju-ink);
+      font-weight: 900;
+      line-height: 1.08;
+      letter-spacing: -0.055em;
+      font-size: clamp(2.7rem, 7vw, 5.8rem);
+    }
+    .section-title {
+      color: #0f172a;
+      font-weight: 900;
+      letter-spacing: -0.038em;
+      line-height: 1.22;
+    }
+    .section-kicker {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.45rem;
+      border-radius: 999px;
+      background: #ecfdf5;
+      color: var(--jeju-deep);
+      padding: .55rem 1rem;
+      font-size: .9rem;
+      font-weight: 900;
+    }
+    .section-kicker::before {
+      content: '';
+      width: .45rem;
+      height: .45rem;
+      border-radius: 999px;
+      background: var(--jeju-green);
+    }
+
+    .card-jeju {
+      border: 1px solid rgba(15, 118, 110, 0.12);
+      border-radius: var(--radius-2xl);
+      box-shadow: var(--shadow-card);
+      background: rgba(255, 255, 255, 0.92);
+      transition: transform .25s ease, box-shadow .25s ease;
+    }
+    .card-jeju:hover {
+      transform: translateY(-5px);
+      box-shadow: var(--shadow-soft);
+    }
+    .hero-card {
+      border-radius: 2.25rem;
+      border: 1px solid rgba(255, 255, 255, 0.9);
+      background: rgba(255, 255, 255, 0.9);
+      box-shadow: var(--shadow-soft);
+      overflow: hidden;
+    }
+    .icon-box {
+      width: 4.25rem;
+      height: 4.25rem;
+      border-radius: 1.35rem;
+      display: grid;
+      place-items: center;
+      background: linear-gradient(180deg, #ecfdf5, #ffffff);
+      border: 1px solid rgba(15, 118, 110, 0.12);
+    }
+
+    .stat-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: .45rem;
+      border: 1px solid rgba(15, 118, 110, 0.12);
+      background: rgba(255, 255, 255, 0.9);
+      color: #334155;
+      border-radius: 999px;
+      padding: .7rem 1rem;
+      font-size: .95rem;
+      font-weight: 800;
+      box-shadow: 0 8px 26px rgba(15, 23, 42, 0.06);
+    }
+
+    .program-tabs .nav-link {
+      width: 100%;
+      border: 1px solid rgba(15, 118, 110, 0.14);
+      border-radius: 1.25rem;
+      padding: 1rem;
+      background: #fff;
+      color: #475569;
+      font-weight: 900;
+      text-align: left;
+    }
+    .program-tabs .nav-link.active {
+      color: #fff;
+      background: linear-gradient(135deg, var(--jeju-deep), var(--jeju-green));
+      border-color: transparent;
+      box-shadow: 0 14px 32px rgba(15, 118, 110, 0.22);
+    }
+    .program-item {
+      border-radius: 1.25rem;
+      padding: 1rem 1.15rem;
+      background: #fff;
+      margin-bottom: .75rem;
+      display: flex;
+      gap: 1rem;
+      align-items: flex-start;
+      box-shadow: 0 6px 18px rgba(15, 23, 42, 0.04);
+    }
+    .program-time {
+      min-width: 4.2rem;
+      color: var(--jeju-deep);
+      font-weight: 900;
+    }
+
+    .map-wrap {
+      min-height: 440px;
+      border-radius: var(--radius-2xl);
+      overflow: hidden;
+      border: 1px solid rgba(15, 118, 110, 0.12);
+      box-shadow: var(--shadow-soft);
+      background: #fff;
+      padding: .75rem;
+    }
+    #map {
+      width: 100%;
+      height: 100%;
+      min-height: 420px;
+      border-radius: 1.55rem;
+      z-index: 1;
+      font-family: 'Noto Sans KR', 'Malgun Gothic', sans-serif;
+    }
+    .leaflet-container { font-family: 'Noto Sans KR', 'Malgun Gothic', sans-serif; }
+    .leaflet-popup-content-wrapper {
+      border-radius: 16px;
+      box-shadow: 0 18px 50px rgba(15, 23, 42, 0.2);
+    }
+    .custom-marker {
+      width: 46px;
+      height: 46px;
+      border-radius: 999px 999px 999px 0;
+      background: linear-gradient(135deg, var(--jeju-deep), var(--jeju-green));
+      transform: rotate(-45deg);
+      box-shadow: 0 14px 34px rgba(15, 118, 110, .35);
+      border: 4px solid #fff;
+      display: grid;
+      place-items: center;
+    }
+    .custom-marker span {
+      transform: rotate(45deg);
+      color: #fff;
+      font-weight: 900;
+      font-size: 14px;
+      line-height: 1;
+    }
+
+    .form-control, .form-select {
+      border-radius: 1rem;
+      border-color: #dbe4e1;
+      padding: .9rem 1rem;
+    }
+    .form-control:focus, .form-select:focus {
+      border-color: var(--jeju-green);
+      box-shadow: 0 0 0 .25rem rgba(20, 184, 166, .15);
+    }
+
+    .accordion-button {
+      border-radius: 1.25rem !important;
+      font-weight: 900;
+      color: #0f172a;
+      background: #fff;
+    }
+    .accordion-button:not(.collapsed) {
+      color: var(--jeju-deep);
+      background: #ecfdf5;
+      box-shadow: none;
+    }
+    .accordion-item {
+      border: 1px solid rgba(15, 118, 110, 0.12);
+      border-radius: 1.25rem !important;
+      overflow: hidden;
+      margin-bottom: .75rem;
+      box-shadow: 0 8px 26px rgba(15, 23, 42, 0.04);
+    }
+
+    .reveal, .hero-animate { opacity: 0; transform: translateY(28px); }
+
+    @media (max-width: 991.98px) {
+      .hero-section { padding-top: 5rem; }
+      .navbar-brand span:last-child { max-width: 15rem; white-space: normal; line-height: 1.25; }
+      .hero-title { font-size: clamp(2.3rem, 12vw, 4.1rem); }
+      .map-wrap, #map { min-height: 360px; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      html { scroll-behavior: auto; }
+      .reveal, .hero-animate { opacity: 1 !important; transform: none !important; }
+      .card-jeju:hover { transform: none; }
+    }
+  </style>
+</head>
+<body>
+  <a class="skip-link" href="#main">본문 바로가기</a>
+
+  <div class="bg-decor" aria-hidden="true">
+    <div class="grid-decor"></div>
+    <div id="blobA" class="blob"></div>
+    <div id="blobB" class="blob"></div>
+    <div id="blobC" class="blob"></div>
+  </div>
+
+  <!-- Header / Bootstrap navbar + offcanvas -->
+  <nav class="navbar navbar-expand-lg sticky-top navbar-glass py-3">
+    <div class="container-xxl">
+      <a class="navbar-brand d-flex align-items-center gap-3 fw-black" href="#home" aria-label="2026 제주 로컬 크리에이터 박람회 홈으로 이동">
+        <span class="brand-mark flex-shrink-0">
+          <svg width="25" height="25" viewBox="0 0 64 64" fill="none" aria-hidden="true">
+            <path d="M12 44C20 30 29 18 46 14C43 28 37 41 20 50L12 44Z" fill="white" opacity="0.95" />
+            <circle cx="48" cy="18" r="4" fill="#FEF3C7" />
+          </svg>
+        </span>
+        <span class="fw-black text-nowrap" style="color:var(--jeju-deep); font-weight:900;">2026 제주 로컬 크리에이터 박람회</span>
+      </a>
+
+      <button class="navbar-toggler border-0 shadow-sm bg-white rounded-4 p-3" type="button" data-bs-toggle="offcanvas" data-bs-target="#mobileNav" aria-controls="mobileNav" aria-label="메뉴 열기">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+
+      <div class="collapse navbar-collapse justify-content-end" id="desktopNav">
+        <ul class="navbar-nav align-items-lg-center gap-lg-1 fw-bold">
+          <li class="nav-item"><a class="nav-link px-3" href="#about">행사 소개</a></li>
+          <li class="nav-item"><a class="nav-link px-3" href="#program">프로그램</a></li>
+          <li class="nav-item"><a class="nav-link px-3" href="#guide">방문객 안내</a></li>
+          <li class="nav-item"><a class="nav-link px-3" href="#location">찾아오기</a></li>
+          <li class="nav-item"><a class="nav-link px-3" href="#apply">신청하기</a></li>
+          <li class="nav-item"><a class="nav-link px-3" href="#contact">문의하기</a></li>
+          <li class="nav-item ms-lg-3"><a class="btn btn-jeju px-4 py-2" href="#apply">사전 신청</a></li>
+        </ul>
+      </div>
+    </div>
+  </nav>
+
+  <div class="offcanvas offcanvas-end" tabindex="-1" id="mobileNav" aria-labelledby="mobileNavLabel">
+    <div class="offcanvas-header border-bottom">
+      <h5 class="offcanvas-title fw-black" id="mobileNavLabel" style="color:var(--jeju-deep); font-weight:900;">박람회 메뉴</h5>
+      <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="닫기"></button>
+    </div>
+    <div class="offcanvas-body">
+      <div class="list-group list-group-flush fw-bold mobile-link-group">
+        <a class="list-group-item list-group-item-action rounded-4 mb-2 border" href="#about" data-bs-dismiss="offcanvas">행사 소개</a>
+        <a class="list-group-item list-group-item-action rounded-4 mb-2 border" href="#program" data-bs-dismiss="offcanvas">프로그램</a>
+        <a class="list-group-item list-group-item-action rounded-4 mb-2 border" href="#guide" data-bs-dismiss="offcanvas">방문객 안내</a>
+        <a class="list-group-item list-group-item-action rounded-4 mb-2 border" href="#location" data-bs-dismiss="offcanvas">찾아오기</a>
+        <a class="list-group-item list-group-item-action rounded-4 mb-2 border" href="#apply" data-bs-dismiss="offcanvas">신청하기</a>
+        <a class="list-group-item list-group-item-action rounded-4 mb-2 border" href="#contact" data-bs-dismiss="offcanvas">문의하기</a>
+      </div>
+    </div>
+  </div>
+
+  <main id="main">
+    <!-- Hero -->
+    <section id="home" class="hero-section">
+      <div class="container-xxl">
+        <div class="row align-items-center g-5">
+          <div class="col-lg-6">
+            <div class="hero-animate d-inline-flex align-items-center gap-2 rounded-pill bg-white border px-4 py-2 fw-black shadow-sm" style="color:var(--jeju-deep); font-weight:900;">
+              <span class="d-inline-block rounded-circle" style="width:.5rem;height:.5rem;background:var(--jeju-green);"></span>
+              도민과 함께 만드는 제주 로컬 브랜드 축제
+            </div>
+            <h1 class="hero-animate hero-title mt-4 mb-0">제주의 일상,<br />로컬 브랜드가 되다</h1>
+            <p class="hero-animate lead mt-4 mb-0 text-secondary" style="line-height:1.9;">
+              제주 로컬 크리에이터의 제품·콘텐츠·이야기를 한자리에서 만나는 3박 4일 박람회입니다.
+              전시, 체험, 판매, 토크콘서트, 네트워킹을 통해 제주형 로컬 산업의 가능성을 도민과 함께 나눕니다.
+            </p>
+            <div class="hero-animate d-flex flex-wrap gap-2 mt-4">
+              <span class="stat-pill">2026. 6. 18.(목) ~ 6. 21.(일)</span>
+              <span class="stat-pill">제주컨벤션센터</span>
+              <span class="stat-pill">도민 대상 / 1,000명</span>
+            </div>
+            <div class="hero-animate d-flex flex-wrap gap-3 mt-5">
+              <a href="#apply" class="btn btn-jeju btn-lg px-4 py-3">사전 신청하기</a>
+              <a href="#program" class="btn btn-outline-jeju btn-lg px-4 py-3">프로그램 보기</a>
+            </div>
+          </div>
+
+          <div class="col-lg-6 hero-animate">
+            <div class="hero-card p-3 p-md-4">
+              <svg viewBox="0 0 720 560" class="w-100 h-auto" role="img" aria-label="제주 로컬 크리에이터 박람회 대표 이미지">
+                <defs>
+                  <linearGradient id="heroGrad" x1="0" y1="0" x2="1" y2="1">
+                    <stop offset="0%" stop-color="#0f766e" />
+                    <stop offset="100%" stop-color="#14b8a6" />
+                  </linearGradient>
+                  <filter id="softShadow" x="-20%" y="-20%" width="140%" height="140%">
+                    <feDropShadow dx="0" dy="16" stdDeviation="18" flood-color="#0f766e" flood-opacity="0.15" />
+                  </filter>
+                </defs>
+                <rect width="720" height="560" rx="34" fill="#f8fffd" />
+                <circle cx="620" cy="80" r="86" fill="#ccfbf1" />
+                <circle cx="95" cy="92" r="58" fill="#fef3c7" />
+                <path d="M63 440C140 378 213 404 280 360C353 311 406 252 518 281C600 302 650 374 668 462H63Z" fill="#ecfdf5" />
+                <rect x="94" y="140" width="532" height="286" rx="30" fill="white" filter="url(#softShadow)" />
+                <rect x="126" y="178" width="188" height="190" rx="24" fill="#ecfdf5" />
+                <circle cx="220" cy="254" r="48" fill="url(#heroGrad)" />
+                <path d="M199 255C214 228 235 215 259 212C255 232 242 256 216 276L199 255Z" fill="white" />
+                <circle cx="261" cy="210" r="8" fill="#fde68a" />
+                <text x="344" y="204" fill="#0f766e" font-size="28" font-weight="900">LOCAL CREATOR FAIR</text>
+                <text x="344" y="240" fill="#64748b" font-size="18" font-weight="600">제주의 감성과 브랜드가 만나는 박람회</text>
+                <rect x="344" y="270" width="220" height="18" rx="9" fill="#0f766e" opacity="0.82" />
+                <rect x="344" y="306" width="170" height="18" rx="9" fill="#14b8a6" opacity="0.55" />
+                <rect x="344" y="346" width="92" height="56" rx="18" fill="#ccfbf1" />
+                <rect x="456" y="346" width="92" height="56" rx="18" fill="#fef3c7" />
+                <rect x="568" y="346" width="36" height="56" rx="18" fill="#fbbf24" opacity="0.38" />
+                <text x="126" y="466" fill="#0f766e" font-size="22" font-weight="900">제주 로컬브랜드 전시 · 체험 · 판매</text>
+                <text x="126" y="496" fill="#64748b" font-size="16" font-weight="600">2026. 6. 18. - 6. 21. / 제주컨벤션센터</text>
+              </svg>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- About -->
+    <section id="about" class="py-5">
+      <div class="container-xxl py-lg-5">
+        <div class="row justify-content-center text-center reveal">
+          <div class="col-lg-8">
+            <span class="section-kicker">행사 소개</span>
+            <h2 class="section-title display-6 mt-4">로컬 크리에이터와 도민이 연결되는 박람회</h2>
+            <p class="text-secondary mt-3 mb-0" style="line-height:1.9;">
+              제주 지역 자원을 바탕으로 활동하는 로컬 크리에이터의 제품과 서비스를 소개하고,
+              도민이 직접 체험하고 소비할 수 있도록 기획한 참여형 박람회입니다.
+            </p>
+          </div>
+        </div>
+        <div class="row g-4 mt-4">
+          <div class="col-md-6 col-lg-4 reveal">
+            <article class="card card-jeju h-100 p-4">
+              <div class="icon-box mb-4">
+                <svg width="36" height="36" viewBox="0 0 64 64" fill="none" aria-hidden="true">
+                  <rect x="10" y="14" width="44" height="36" rx="8" fill="#ccfbf1" />
+                  <path d="M18 25H46" stroke="#0f766e" stroke-width="4" stroke-linecap="round" />
+                  <path d="M18 33H38" stroke="#0f766e" stroke-width="4" stroke-linecap="round" opacity="0.8" />
+                  <path d="M18 41H30" stroke="#0f766e" stroke-width="4" stroke-linecap="round" opacity="0.6" />
+                </svg>
+              </div>
+              <h3 class="h4 fw-black" style="font-weight:900;">행사 목적</h3>
+              <p class="text-secondary mt-3 mb-0" style="line-height:1.8;">제주 로컬 브랜드의 인지도를 높이고, 전시·판매·체험을 통해 도민 중심의 지역 소비 활성화 기반을 마련합니다.</p>
+            </article>
+          </div>
+          <div class="col-md-6 col-lg-4 reveal">
+            <article class="card card-jeju h-100 p-4">
+              <div class="icon-box mb-4">
+                <svg width="36" height="36" viewBox="0 0 64 64" fill="none" aria-hidden="true">
+                  <circle cx="20" cy="24" r="8" fill="#99f6e4" />
+                  <circle cx="44" cy="24" r="8" fill="#99f6e4" />
+                  <path d="M12 46C12 39.3726 17.3726 34 24 34H40C46.6274 34 52 39.3726 52 46V48H12V46Z" fill="#0f766e" opacity="0.9" />
+                </svg>
+              </div>
+              <h3 class="h4 fw-black" style="font-weight:900;">대상 및 규모</h3>
+              <p class="text-secondary mt-3 mb-0" style="line-height:1.8;">제주도민과 로컬 크리에이터가 함께 참여하며, 행사 기간 누적 관람객 1,000명 규모로 운영합니다.</p>
+            </article>
+          </div>
+          <div class="col-md-12 col-lg-4 reveal">
+            <article class="card card-jeju h-100 p-4">
+              <div class="icon-box mb-4" style="background:#fff7ed;">
+                <svg width="36" height="36" viewBox="0 0 64 64" fill="none" aria-hidden="true">
+                  <rect x="12" y="18" width="40" height="28" rx="8" fill="#fef3c7" />
+                  <path d="M12 28H52" stroke="#f59e0b" stroke-width="3" />
+                  <circle cx="22" cy="24" r="2.5" fill="#f59e0b" />
+                  <circle cx="42" cy="24" r="2.5" fill="#f59e0b" />
+                </svg>
+              </div>
+              <h3 class="h4 fw-black" style="font-weight:900;">운영 개요</h3>
+              <p class="text-secondary mt-3 mb-0" style="line-height:1.8;">전시, 판매, 체험, 강연, 네트워킹, 이벤트를 결합한 종합형 로컬 박람회로 구성합니다.</p>
+            </article>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Program -->
+    <section id="program" class="py-5">
+      <div class="container-xxl py-lg-5">
+        <div class="row justify-content-center text-center reveal">
+          <div class="col-lg-8">
+            <span class="section-kicker">프로그램</span>
+            <h2 class="section-title display-6 mt-4">3박 4일 동안 다채롭게 운영되는 핵심 프로그램</h2>
+            <p class="text-secondary mt-3 mb-0" style="line-height:1.9;">개막식부터 전시·판매, 체험, 로컬 토크, 네트워킹까지 관람과 참여가 모두 가능한 프로그램으로 구성합니다.</p>
+          </div>
+        </div>
+
+        <div class="row g-4 mt-4">
+          <div class="col-lg-4 reveal">
+            <div class="card card-jeju h-100 p-4">
+              <h3 class="h4" style="font-weight:900;">전시·판매존</h3>
+              <p class="text-secondary mt-3">제주 로컬 브랜드의 제품 전시, 홍보, 현장 판매 부스 운영</p>
+              <ul class="list-unstyled small fw-bold text-secondary mb-0">
+                <li class="mb-2">• 식품 / 공예 / 생활소품 / 콘텐츠</li>
+                <li class="mb-2">• 60개 내외 참여 부스 구성</li>
+                <li>• 현장 구매 및 이벤트 연계</li>
+              </ul>
+            </div>
+          </div>
+          <div class="col-lg-4 reveal">
+            <div class="card card-jeju h-100 p-4">
+              <h3 class="h4" style="font-weight:900;">체험 프로그램</h3>
+              <p class="text-secondary mt-3">도민이 직접 참여할 수 있는 공예, 로컬푸드, 제주문화 체험</p>
+              <ul class="list-unstyled small fw-bold text-secondary mb-0">
+                <li class="mb-2">• 가족 단위 참여형 운영</li>
+                <li class="mb-2">• 사전예약 + 현장접수 병행</li>
+                <li>• 체험 완료 인증 이벤트 진행</li>
+              </ul>
+            </div>
+          </div>
+          <div class="col-lg-4 reveal">
+            <div class="card card-jeju h-100 p-4">
+              <h3 class="h4" style="font-weight:900;">토크·네트워킹</h3>
+              <p class="text-secondary mt-3">로컬 브랜드 사례 공유, 창업 강연, 참여자 간 교류 프로그램 운영</p>
+              <ul class="list-unstyled small fw-bold text-secondary mb-0">
+                <li class="mb-2">• 성공사례 토크콘서트</li>
+                <li class="mb-2">• 유통·브랜딩 상담</li>
+                <li>• 참여기업 교류회 운영</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+
+        <div class="card card-jeju mt-5 p-3 p-md-4 reveal">
+          <ul class="nav nav-pills program-tabs row g-3" id="programTab" role="tablist">
+            <li class="nav-item col-sm-6 col-lg-3" role="presentation">
+              <button class="nav-link active" id="day1-tab" data-bs-toggle="pill" data-bs-target="#day1" type="button" role="tab" aria-controls="day1" aria-selected="true">DAY 1<br><span class="small opacity-75">6.18(목)</span></button>
+            </li>
+            <li class="nav-item col-sm-6 col-lg-3" role="presentation">
+              <button class="nav-link" id="day2-tab" data-bs-toggle="pill" data-bs-target="#day2" type="button" role="tab" aria-controls="day2" aria-selected="false">DAY 2<br><span class="small opacity-75">6.19(금)</span></button>
+            </li>
+            <li class="nav-item col-sm-6 col-lg-3" role="presentation">
+              <button class="nav-link" id="day3-tab" data-bs-toggle="pill" data-bs-target="#day3" type="button" role="tab" aria-controls="day3" aria-selected="false">DAY 3<br><span class="small opacity-75">6.20(토)</span></button>
+            </li>
+            <li class="nav-item col-sm-6 col-lg-3" role="presentation">
+              <button class="nav-link" id="day4-tab" data-bs-toggle="pill" data-bs-target="#day4" type="button" role="tab" aria-controls="day4" aria-selected="false">DAY 4<br><span class="small opacity-75">6.21(일)</span></button>
+            </li>
+          </ul>
+
+          <div class="tab-content rounded-5 bg-light p-3 p-md-4 mt-4" id="programTabContent">
+            <div class="tab-pane fade show active" id="day1" role="tabpanel" aria-labelledby="day1-tab" tabindex="0">
+              <h3 class="h3 mb-4" style="font-weight:900;">개막 및 로컬 비전 공유</h3>
+              <div class="program-item"><span class="program-time">10:00</span><span>개막식 및 환영 행사</span></div>
+              <div class="program-item"><span class="program-time">11:00</span><span>주요 부스 라운딩 및 박람회 소개</span></div>
+              <div class="program-item"><span class="program-time">13:00</span><span>제주 로컬 창업 정책 세션</span></div>
+              <div class="program-item"><span class="program-time">15:00</span><span>전시·판매존 운영</span></div>
+              <div class="program-item mb-0"><span class="program-time">17:00</span><span>참여기업 네트워킹</span></div>
+            </div>
+            <div class="tab-pane fade" id="day2" role="tabpanel" aria-labelledby="day2-tab" tabindex="0">
+              <h3 class="h3 mb-4" style="font-weight:900;">브랜드 성장과 판로 확대</h3>
+              <div class="program-item"><span class="program-time">10:00</span><span>전시·판매 부스 상시 운영</span></div>
+              <div class="program-item"><span class="program-time">13:00</span><span>로컬 브랜드 성공사례 강연</span></div>
+              <div class="program-item"><span class="program-time">14:30</span><span>판로·유통 상담회</span></div>
+              <div class="program-item"><span class="program-time">16:00</span><span>도민 체험 프로그램</span></div>
+              <div class="program-item mb-0"><span class="program-time">18:00</span><span>야간 로컬 마켓</span></div>
+            </div>
+            <div class="tab-pane fade" id="day3" role="tabpanel" aria-labelledby="day3-tab" tabindex="0">
+              <h3 class="h3 mb-4" style="font-weight:900;">도민 참여 집중의 날</h3>
+              <div class="program-item"><span class="program-time">10:00</span><span>가족 참여형 체험 프로그램</span></div>
+              <div class="program-item"><span class="program-time">12:00</span><span>로컬푸드·상품 판매전</span></div>
+              <div class="program-item"><span class="program-time">14:00</span><span>도민 참여 토크콘서트</span></div>
+              <div class="program-item"><span class="program-time">16:00</span><span>스탬프 투어 및 현장 이벤트</span></div>
+              <div class="program-item mb-0"><span class="program-time">18:00</span><span>주말 야간 마켓 운영</span></div>
+            </div>
+            <div class="tab-pane fade" id="day4" role="tabpanel" aria-labelledby="day4-tab" tabindex="0">
+              <h3 class="h3 mb-4" style="font-weight:900;">성과 공유 및 폐막</h3>
+              <div class="program-item"><span class="program-time">10:00</span><span>전시·체험 마지막 운영</span></div>
+              <div class="program-item"><span class="program-time">13:00</span><span>우수 로컬 브랜드 발표</span></div>
+              <div class="program-item"><span class="program-time">15:00</span><span>도민 만족도 조사 및 현장 의견 수렴</span></div>
+              <div class="program-item"><span class="program-time">16:00</span><span>성과 공유 및 폐막식</span></div>
+              <div class="program-item mb-0"><span class="program-time">17:00</span><span>행사 종료 및 철수</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Visitor Guide / Bootstrap cards -->
+    <section id="guide" class="py-5">
+      <div class="container-xxl py-lg-5">
+        <div class="row justify-content-center text-center reveal">
+          <div class="col-lg-8">
+            <span class="section-kicker">방문객 이용 안내</span>
+            <h2 class="section-title display-6 mt-4">처음 방문해도 편하게 즐길 수 있습니다</h2>
+            <p class="text-secondary mt-3 mb-0" style="line-height:1.9;">
+              제주 로컬 크리에이터 박람회는 도민 누구나 자유롭게 방문할 수 있는 참여형 행사입니다.
+              전시 관람은 행사 기간 중 자유롭게 가능하며, 체험 프로그램과 일부 토크 프로그램은 사전 신청자를 우선으로 운영합니다.
+            </p>
+          </div>
+        </div>
+
+        <div class="row g-4 mt-4 align-items-stretch">
+          <div class="col-md-6 col-xl-3 reveal">
+            <article class="card card-jeju h-100 p-4">
+              <div class="icon-box mb-4">
+                <svg width="36" height="36" viewBox="0 0 64 64" fill="none" aria-hidden="true">
+                  <rect x="12" y="14" width="40" height="38" rx="9" fill="#ccfbf1" />
+                  <path d="M22 26H42" stroke="#0f766e" stroke-width="4" stroke-linecap="round" />
+                  <path d="M22 36H36" stroke="#0f766e" stroke-width="4" stroke-linecap="round" opacity="0.75" />
+                  <path d="M19 46L25 40L31 46" stroke="#f59e0b" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" />
+                </svg>
+              </div>
+              <h3 class="h4" style="font-weight:900;">입장 및 신청 안내</h3>
+              <p class="text-secondary mt-3 mb-3" style="line-height:1.75;">일반 관람은 자유롭게 가능하며, 일부 프로그램은 사전 신청자를 우선 배정합니다.</p>
+              <ul class="list-unstyled small fw-bold text-secondary mb-0">
+                <li class="mb-2">• 행사 기간 중 자유 입장 가능</li>
+                <li class="mb-2">• 체험·토크·네트워킹은 사전 신청 우선</li>
+                <li>• 혼잡 시 현장 접수 조기 마감 가능</li>
+              </ul>
+            </article>
+          </div>
+
+          <div class="col-md-6 col-xl-3 reveal">
+            <article class="card card-jeju h-100 p-4">
+              <div class="icon-box mb-4">
+                <svg width="36" height="36" viewBox="0 0 64 64" fill="none" aria-hidden="true">
+                  <circle cx="23" cy="23" r="10" fill="#99f6e4" />
+                  <circle cx="43" cy="23" r="10" fill="#fef3c7" />
+                  <rect x="14" y="36" width="36" height="14" rx="7" fill="#0f766e" opacity="0.9" />
+                  <path d="M24 43H40" stroke="white" stroke-width="4" stroke-linecap="round" />
+                </svg>
+              </div>
+              <h3 class="h4" style="font-weight:900;">체험 프로그램 이용</h3>
+              <p class="text-secondary mt-3 mb-3" style="line-height:1.75;">프로그램별 정원이 있어 체험 참여를 원할 경우 사전 신청을 권장합니다.</p>
+              <ul class="list-unstyled small fw-bold text-secondary mb-0">
+                <li class="mb-2">• 잔여 좌석은 현장 접수 가능</li>
+                <li class="mb-2">• 시작 10분 전까지 도착 권장</li>
+                <li>• 어린이 체험은 보호자 동반 참여</li>
+              </ul>
+            </article>
+          </div>
+
+          <div class="col-md-6 col-xl-3 reveal">
+            <article class="card card-jeju h-100 p-4">
+              <div class="icon-box mb-4" style="background:#fff7ed;">
+                <svg width="36" height="36" viewBox="0 0 64 64" fill="none" aria-hidden="true">
+                  <path d="M18 18H46V46H18V18Z" fill="#fef3c7" />
+                  <path d="M24 18V46" stroke="#f59e0b" stroke-width="4" />
+                  <path d="M40 18V46" stroke="#f59e0b" stroke-width="4" />
+                  <path d="M18 30H46" stroke="#0f766e" stroke-width="4" />
+                  <circle cx="32" cy="30" r="6" fill="#14b8a6" />
+                </svg>
+              </div>
+              <h3 class="h4" style="font-weight:900;">현장 이벤트 안내</h3>
+              <p class="text-secondary mt-3 mb-3" style="line-height:1.75;">부스 방문과 구매, 후기 참여를 통해 다양한 현장 이벤트를 즐길 수 있습니다.</p>
+              <ul class="list-unstyled small fw-bold text-secondary mb-0">
+                <li class="mb-2">• 부스 방문 스탬프 투어</li>
+                <li class="mb-2">• 로컬 제품 구매 인증 이벤트</li>
+                <li>• SNS 후기 및 포토존 이벤트</li>
+              </ul>
+            </article>
+          </div>
+
+          <div class="col-md-6 col-xl-3 reveal">
+            <article class="card card-jeju h-100 p-4">
+              <div class="icon-box mb-4">
+                <svg width="36" height="36" viewBox="0 0 64 64" fill="none" aria-hidden="true">
+                  <path d="M16 50V22L32 14L48 22V50H16Z" fill="#ccfbf1" />
+                  <path d="M24 50V38H40V50" fill="#14b8a6" opacity="0.85" />
+                  <path d="M22 28H28M36 28H42" stroke="#0f766e" stroke-width="4" stroke-linecap="round" />
+                  <circle cx="50" cy="16" r="6" fill="#f59e0b" />
+                </svg>
+              </div>
+              <h3 class="h4" style="font-weight:900;">편의 안내</h3>
+              <p class="text-secondary mt-3 mb-3" style="line-height:1.75;">방문객이 편리하게 이용할 수 있도록 현장 편의시설과 안내 체계를 운영합니다.</p>
+              <ul class="list-unstyled small fw-bold text-secondary mb-0">
+                <li class="mb-2">• 종합안내데스크 및 리플릿 제공</li>
+                <li class="mb-2">• 휴게공간·응급상황 대응 인력 배치</li>
+                <li>• 유모차·휠체어 이동 동선 고려</li>
+              </ul>
+            </article>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Location -->
+    <section id="location" class="py-5">
+      <div class="container-xxl py-lg-5">
+        <div class="row justify-content-center text-center reveal">
+          <div class="col-lg-8">
+            <span class="section-kicker">찾아오기</span>
+            <h2 class="section-title display-6 mt-4">제주컨벤션센터에서 만나는 로컬 크리에이터 박람회</h2>
+          </div>
+        </div>
+
+        <div class="row g-4 mt-4 align-items-stretch">
+          <div class="col-lg-7 reveal">
+            <div class="map-wrap h-100">
+              <div id="map" aria-label="제주컨벤션센터 위치 지도"></div>
+            </div>
+          </div>
+          <div class="col-lg-5 reveal">
+            <aside class="card card-jeju h-100 p-4 p-md-5">
+              <h3 class="h3" style="font-weight:900;">교통 및 이용 안내</h3>
+              <div class="vstack gap-3 mt-4">
+                <div class="rounded-4 bg-success-subtle p-4">
+                  <strong class="d-block" style="color:var(--jeju-deep);">행사 장소</strong>
+                  <p class="text-secondary mb-0 mt-1">제주컨벤션센터<br />제주특별자치도 서귀포시 중문관광로 224</p>
+                </div>
+                <div class="rounded-4 bg-light p-4">
+                  <strong class="d-block text-dark">자가용 이용</strong>
+                  <p class="text-secondary mb-0 mt-1">내비게이션에 ‘제주컨벤션센터’ 또는 ‘ICC JEJU’ 검색</p>
+                </div>
+                <div class="rounded-4 bg-light p-4">
+                  <strong class="d-block text-dark">대중교통 이용</strong>
+                  <p class="text-secondary mb-0 mt-1">중문관광단지 및 제주국제컨벤션센터 방면 노선 이용</p>
+                </div>
+                <div class="rounded-4 p-4" style="background:var(--jeju-cream);">
+                  <strong class="d-block" style="color:#b45309;">운영 시간</strong>
+                  <p class="text-secondary mb-0 mt-1">매일 10:00 ~ 18:00<br />일부 프로그램은 야간 연장 운영</p>
+                </div>
+              </div>
+            </aside>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Apply -->
+    <section id="apply" class="py-5">
+      <div class="container-xxl py-lg-5">
+        <div class="row justify-content-center text-center reveal">
+          <div class="col-lg-8">
+            <span class="section-kicker">신청하기</span>
+            <h2 class="section-title display-6 mt-4">사전 신청으로 더 편리하게 참여하세요</h2>
+            <p class="text-secondary mt-3 mb-0" style="line-height:1.9;">체험 프로그램 및 일부 참여형 세션은 사전 신청자를 우선으로 운영할 수 있습니다.</p>
+          </div>
+        </div>
+
+        <div class="row g-4 mt-4 align-items-stretch">
+          <div class="col-lg-7 reveal">
+            <form id="applyForm" class="card card-jeju p-4 p-md-5 needs-validation" novalidate>
+              <h3 class="h3 mb-4" style="font-weight:900;">사전 신청 폼</h3>
+              <div class="row g-3">
+                <div class="col-md-6">
+                  <label class="form-label fw-bold" for="name">이름</label>
+                  <input class="form-control" type="text" id="name" name="name" placeholder="홍길동" required />
+                  <div class="invalid-feedback">이름을 입력해 주세요.</div>
+                </div>
+                <div class="col-md-6">
+                  <label class="form-label fw-bold" for="phone">연락처</label>
+                  <input class="form-control" type="tel" id="phone" name="phone" placeholder="010-0000-0000" required />
+                  <div class="invalid-feedback">연락처를 입력해 주세요.</div>
+                </div>
+                <div class="col-md-6">
+                  <label class="form-label fw-bold" for="programSelect">관심 프로그램</label>
+                  <select class="form-select" id="programSelect" name="program" required>
+                    <option value="전시·판매 관람">전시·판매 관람</option>
+                    <option value="체험 프로그램">체험 프로그램</option>
+                    <option value="토크콘서트">토크콘서트</option>
+                    <option value="네트워킹 세션">네트워킹 세션</option>
+                  </select>
+                </div>
+                <div class="col-md-6">
+                  <label class="form-label fw-bold" for="visitDate">방문 예정일</label>
+                  <select class="form-select" id="visitDate" name="date" required>
+                    <option value="6월 18일(목)">6월 18일(목)</option>
+                    <option value="6월 19일(금)">6월 19일(금)</option>
+                    <option value="6월 20일(토)">6월 20일(토)</option>
+                    <option value="6월 21일(일)">6월 21일(일)</option>
+                  </select>
+                </div>
+                <div class="col-12">
+                  <label class="form-label fw-bold" for="message">문의사항</label>
+                  <textarea class="form-control" id="message" name="message" rows="5" placeholder="문의사항 또는 요청사항을 입력해 주세요."></textarea>
+                </div>
+              </div>
+              <button class="btn btn-jeju btn-lg w-100 mt-4 py-3" type="submit">신청서 제출</button>
+              </form>
+          </div>
+          <div class="col-lg-5 reveal">
+            <div class="card card-jeju h-100 p-4 p-md-5">
+              <h3 class="h3" style="font-weight:900;">신청 안내</h3>
+              <div class="vstack gap-3 mt-4">
+                <div class="rounded-4 bg-success-subtle p-4"><strong style="color:var(--jeju-deep);">신청 대상</strong><p class="text-secondary mb-0 mt-1">제주도민 누구나 신청 가능</p></div>
+                <div class="rounded-4 bg-light p-4"><strong>참여 방식</strong><p class="text-secondary mb-0 mt-1">일반 관람은 현장 참여 가능 / 일부 프로그램은 사전 신청 우선</p></div>
+                <div class="rounded-4 bg-light p-4"><strong>신청 혜택</strong><p class="text-secondary mb-0 mt-1">체험 프로그램 우선 배정, 현장 안내 서비스, 이벤트 참여 안내</p></div>
+                <div class="rounded-4 p-4" style="background:var(--jeju-cream);"><strong style="color:#b45309;">유의사항</strong><p class="text-secondary mb-0 mt-1">행사 운영 상황에 따라 프로그램별 정원이 조정될 수 있습니다.</p></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Contact -->
+    <section id="contact" class="py-5">
+      <div class="container-xxl py-lg-5">
+        <div class="card card-jeju p-4 p-md-5 reveal">
+          <div class="row g-4 align-items-center">
+            <div class="col-lg-6">
+              <span class="section-kicker">문의하기</span>
+              <h2 class="section-title display-6 mt-4">행사 관련 문의</h2>
+              </div>
+            <div class="col-lg-6">
+              <div class="row g-3">
+                <div class="col-md-4 col-lg-12"><div class="rounded-4 bg-success-subtle p-4 h-100"><strong class="d-block" style="color:var(--jeju-deep);">주최</strong><span class="text-secondary">제주특별자치도</span></div></div>
+                <div class="col-md-4 col-lg-12"><div class="rounded-4 bg-light p-4 h-100"><strong class="d-block">주관</strong><span class="text-secondary">로컬 크리에이터 박람회 운영사무국</span></div></div>
+                <div class="col-md-4 col-lg-12"><div class="rounded-4 p-4 h-100" style="background:var(--jeju-cream);"><strong class="d-block" style="color:#b45309;">문의처</strong><span class="text-secondary">064-000-0000 / localfair@jeju.go.kr</span></div></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="border-top bg-white py-4">
+    <div class="container-xxl d-flex flex-column flex-md-row justify-content-between gap-2 small text-secondary">
+      <p class="mb-0">© 2026 제주 로컬 크리에이터 박람회. All Rights Reserved.</p>
+      <p class="mb-0">제주특별자치도 · 제주컨벤션센터 · 도민 참여형 로컬 박람회</p>
+    </div>
+  </footer>
+
+  <!-- Toast for form demo -->
+  <div class="toast-container position-fixed bottom-0 end-0 p-3">
+    <div id="applyToast" class="toast align-items-center border-0 text-bg-success" role="status" aria-live="polite" aria-atomic="true">
+      <div class="d-flex">
+        <div class="toast-body fw-bold">사전 신청 폼 UI 시연입니다. 실제 운영 시 신청 처리 기능을 연결해 주세요.</div>
+        <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="닫기"></button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bootstrap JS bundle includes Popper. -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
+
+  <!-- GSAP animations. -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+
+  <!-- Leaflet JS -->
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+      // Bootstrap tab transition animation for program panels.
+      document.querySelectorAll('[data-bs-toggle="pill"]').forEach(function (tab) {
+        tab.addEventListener('shown.bs.tab', function (event) {
+          const selector = event.target.getAttribute('data-bs-target');
+          const panel = document.querySelector(selector);
+          if (panel && window.gsap && !prefersReducedMotion) {
+            gsap.fromTo(panel, { opacity: 0, y: 18 }, { opacity: 1, y: 0, duration: 0.38, ease: 'power2.out' });
+          }
+        });
+      });
+
+      // Leaflet map. Use a div icon to prevent local file path/default marker image breakage.
+      const iccJeju = [33.239051, 126.424995];
+      const map = L.map('map', {
+        center: iccJeju,
+        zoom: 15,
+        scrollWheelZoom: false,
+        zoomControl: true,
+        attributionControl: true
+      });
+
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 19,
+        attribution: '&copy; OpenStreetMap contributors'
+      }).addTo(map);
+
+      const markerIcon = L.divIcon({
+        className: '',
+        html: '<div class="custom-marker"><span>ICC</span></div>',
+        iconSize: [46, 46],
+        iconAnchor: [23, 46],
+        popupAnchor: [0, -42]
+      });
+
+      L.marker(iccJeju, { icon: markerIcon })
+        .addTo(map)
+        .bindPopup('<strong>제주컨벤션센터</strong><br>2026 제주 로컬 크리에이터 박람회<br>서귀포시 중문관광로 224')
+        .openPopup();
+
+      function fixMapSize() {
+        map.invalidateSize({ animate: false });
+        map.setView(iccJeju, 15);
+      }
+      setTimeout(fixMapSize, 200);
+      setTimeout(fixMapSize, 900);
+      window.addEventListener('resize', function () { setTimeout(fixMapSize, 150); });
+      window.addEventListener('load', function () { setTimeout(fixMapSize, 250); });
+
+      // Bootstrap form validation + toast demo.
+      const form = document.getElementById('applyForm');
+      const toastEl = document.getElementById('applyToast');
+      const toast = bootstrap.Toast.getOrCreateInstance(toastEl);
+      form.addEventListener('submit', function (event) {
+        event.preventDefault();
+        event.stopPropagation();
+        form.classList.add('was-validated');
+        if (form.checkValidity()) {
+          toast.show();
+        }
+      });
+
+      // GSAP animations.
+      if (window.gsap && !prefersReducedMotion) {
+        gsap.registerPlugin(ScrollTrigger);
+
+        gsap.fromTo('.hero-animate',
+          { opacity: 0, y: 30 },
+          { opacity: 1, y: 0, duration: 0.78, stagger: 0.12, ease: 'power3.out' }
+        );
+
+        gsap.to('#blobA', { x: 82, y: 34, scale: 1.08, duration: 7, repeat: -1, yoyo: true, ease: 'sine.inOut' });
+        gsap.to('#blobB', { x: -72, y: 52, scale: 0.92, duration: 8.5, repeat: -1, yoyo: true, ease: 'sine.inOut' });
+        gsap.to('#blobC', { x: 62, y: -42, scale: 1.05, duration: 9.5, repeat: -1, yoyo: true, ease: 'sine.inOut' });
+
+        gsap.utils.toArray('.reveal').forEach(function (el) {
+          gsap.fromTo(el,
+            { opacity: 0, y: 34 },
+            {
+              opacity: 1,
+              y: 0,
+              duration: 0.72,
+              ease: 'power3.out',
+              scrollTrigger: {
+                trigger: el,
+                start: 'top 86%',
+                once: true
+              }
+            }
+          );
+        });
+      } else {
+        document.querySelectorAll('.reveal, .hero-animate').forEach(function (el) {
+          el.style.opacity = 1;
+          el.style.transform = 'none';
+        });
+      }
+    });
+  </script>
+</body>
+</html>
